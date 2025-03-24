@@ -21,7 +21,7 @@ function setPool() {
     if ($response['status'] === 'error') {
         return $response;
     }
-    sleep(2);
+    sleep(4);
     $response = executeCurlCommand('Relay 1 off');
     if ($response['status'] === 'error') {
         return $response;
@@ -31,7 +31,7 @@ function setPool() {
     if ($response['status'] === 'error') {
         return $response;
     }
-    sleep(2);
+    sleep(4);
     $response = executeCurlCommand('Relay 4 off');
     if ($response['status'] === 'error') {
         return $response;
@@ -45,7 +45,7 @@ function setPool() {
         if ($response['status'] === 'error') {
             return $response;
         }
-        return ['status' => 'warning', 'message' => 'Heater was on spa and has been turned off. Pump is set to fast.'];
+        return ['status' => 'warning', 'message' => 'Heater was on spa so heater has been turned off.'];
     }
     return ['status' => 'success'];
 }
@@ -56,17 +56,16 @@ function setSpa() {
     if ($response['status'] === 'error') {
         return $response;
     }
-    sleep(2);
+    sleep(4);
     $response = executeCurlCommand('Relay 2 off');
     if ($response['status'] === 'error') {
         return $response;
     }
-    sleep(1);
     $response = executeCurlCommand('Relay 3');
     if ($response['status'] === 'error') {
         return $response;
     }
-    sleep(2);
+    sleep(4);
     $response = executeCurlCommand('Relay 3 off');
     return $response;
 }
@@ -77,29 +76,29 @@ function heaterOff() {
     if ($response['status'] === 'error') {
         return $response;
     }
-    sleep(0.5);
+    sleep(1);
     $response = executeCurlCommand('Relay 5 off');
     return $response;
 }
 
-// Subroutine to control relay for heater pool
+// Subroutine to toggle relay for heater pool
 function heaterPool() {
     $response = executeCurlCommand('Relay 6');
     if ($response['status'] === 'error') {
         return $response;
     }
-    sleep(0.5);
+    sleep(1);
     $response = executeCurlCommand('Relay 6 off');
     return $response;
 }
 
-// Subroutine to control relay for heater spa
+// Subroutine to toggle relay for heater spa
 function heaterSpa() {
     $response = executeCurlCommand('Relay 7');
     if ($response['status'] === 'error') {
         return $response;
     }
-    sleep(0.5);
+    sleep(1);
     $response = executeCurlCommand('Relay 7 off');
     return $response;
 }
@@ -107,20 +106,20 @@ function heaterSpa() {
 // Subroutine to control relay for pump off
 function pumpOff() {
     global $settings;
-    if ($settings['heater'] !== 'off') {
-        $response = heaterOff();
-        if ($response['status'] === 'error') {
-            return $response;
-        }
-        sleep(5);
-    }
-    $response = executeCurlCommand('Relay 8');
+    $response = heaterOff();
     if ($response['status'] === 'error') {
         return $response;
     }
     sleep(1);
-    $response = executeCurlCommand('Relay 8 off');
-    return $response;
+    $response = executeCurlCommand('Relay 10 off');
+    if ($response['status'] === 'error') {
+        return $response;
+    }
+    $response = executeCurlCommand('Relay 9 off');
+    if ($response['status'] === 'error') {
+        return $response;
+    }
+    return executeCurlCommand('Relay 8 off');
 }
 
 // Subroutine to control relay for pump slow
@@ -129,8 +128,7 @@ function pumpSlow() {
     if ($response['status'] === 'error') {
         return $response;
     }
-    $response = executeCurlCommand('Relay 9');
-    return $response;
+    return executeCurlCommand('Relay 9');
 }
 
 // Subroutine to control relay for pump fast
@@ -139,13 +137,13 @@ function pumpFast() {
     if ($response['status'] === 'error') {
         return $response;
     }
-    $response = executeCurlCommand('Relay 10');
-    return $response;
+    return executeCurlCommand('Relay 10');
 }
 
 // Subroutine to control relays for mix setting
 function setMix() {
-    $response = executeCurlCommand('Relay 1');
+    global $settings;
+    $response = executeCurlCommand('Relay 1'); // Pool inlet
     if ($response['status'] === 'error') {
         return $response;
     }
@@ -154,8 +152,7 @@ function setMix() {
     if ($response['status'] === 'error') {
         return $response;
     }
-    sleep(2);
-    $response = executeCurlCommand('Relay 2');
+    $response = executeCurlCommand('Relay 2'); // Spa inlet
     if ($response['status'] === 'error') {
         return $response;
     }
@@ -164,8 +161,34 @@ function setMix() {
     if ($response['status'] === 'error') {
         return $response;
     }
+    $response = executeCurlCommand('Relay 3'); // Pool outlet
+    if ($response['status'] === 'error') {
+        return $response;
+    }
+    sleep(4);
+    $response = executeCurlCommand('Relay 3 off');
+    if ($response['status'] === 'error') {
+        return $response;
+    }
+    $response = executeCurlCommand('Relay 4'); // Spa outlet
+    if ($response['status'] === 'error') {
+        return $response;
+    }
+    sleep(2);
+    $response = executeCurlCommand('Relay 4 off');
+    if ($response['status'] === 'error') {
+        return $response;
+    }
     $response = heaterOff();
-    return $response;
+    if ($response['status'] === 'error') {
+        return $response;
+    }
+    $response = pumpSlow();
+    if ($response['status'] === 'error') {
+       return $response;
+    }
+
+    return ['status' => 'success'];
 }
 
 ?>

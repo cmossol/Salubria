@@ -62,6 +62,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 exit;
             }
 
+            // Check if the heater is set to spa while the valve is set to pool
+            if ($setting === "heater" && $value === "spa" && $settings["valve"] === "pool") {
+                $response = heaterOff();
+                if ($response['status'] === 'error') {
+                    echo json_encode(["success" => false, "message" => $response['message']]);
+                } else {
+                    echo json_encode(["success" => false, "message" => "Valve set to pool while heater is set to spa. Heater turned off to prevent overheating."]);
+                }
+                exit;
+            }
+
             $settings[$setting] = $value;
             file_put_contents($settingsFile, json_encode($settings, JSON_PRETTY_PRINT));
 
@@ -86,6 +97,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $response = setMix();
                 if ($response['status'] === 'error') {
                     echo json_encode(["success" => false, "message" => $response['message']]);
+                } else if ($response['status'] === 'warning') {
+                    echo json_encode(["success" => true, "message" => $response['message']]);
                 } else {
                     echo json_encode(["success" => true, "message" => "Mix subroutine executed successfully"]);
                 }
@@ -103,7 +116,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 if ($response['status'] === 'error') {
                     echo json_encode(["success" => false, "message" => $response['message']]);
                 } else {
-                    echo json_encode(["success" => true, "message" => $response['message'] === "Pump is now set to fast" ? $response['message'] : "Heater pool subroutine executed successfully"]);
+                    echo json_encode(["success" => true, "message" => "Heater pool subroutine executed successfully"]);
                 }
                 exit;
             } elseif ($setting === "heater" && $value === "spa") {
@@ -111,13 +124,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 if ($response['status'] === 'error') {
                     echo json_encode(["success" => false, "message" => $response['message']]);
                 } else {
-                    echo json_encode(["success" => true, "message" => $response['message'] === "Pump is now set to fast" ? $response['message'] : "Heater spa subroutine executed successfully"]);
+                    echo json_encode(["success" => true, "message" => "Heater spa subroutine executed successfully"]);
                 }
                 exit;
             } elseif ($setting === "pump" && $value === "off") {
                 $response = pumpOff();
                 if ($response['status'] === 'error') {
                     echo json_encode(["success" => false, "message" => $response['message']]);
+                } else if ($response['status'] === 'warning') {
+                    echo json_encode(["success" => true, "message" => $response['message']]);
                 } else {
                     echo json_encode(["success" => true, "message" => "Pump off subroutine executed successfully"]);
                 }
@@ -296,3 +311,4 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
 <?php
     exit;
 }
+?>
