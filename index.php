@@ -33,9 +33,12 @@ if (file_exists($settingsFile)) {
 
 // Handle POST requests
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    file_put_contents('debug.log', date('Y-m-d H:i:s') . ' POST request received.' . PHP_EOL, FILE_APPEND);
     if (isset($_POST["setting"]) && isset($_POST["value"])) {
         $setting = htmlspecialchars($_POST["setting"]);
         $value = htmlspecialchars($_POST["value"]);
+
+        file_put_contents('debug.log', date('Y-m-d H:i:s') . " Received setting: $setting with value: $value" . PHP_EOL, FILE_APPEND);
 
         // Update settings
         if (array_key_exists($setting, $settings)) {
@@ -74,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
 
             $settings[$setting] = $value;
-            file_put_contents($settingsFile, json_encode($settings, JSON_PRETTY_PRINT));
+            file_put_contents($settingsFile, json_encode($settings, JSON_PRETTY_PRINT)); // Save the state to settings.json
 
             // If the pool button is clicked, call the pool subroutine
             if ($setting === "valve" && $value === "pool") {
@@ -215,7 +218,7 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
         }
         button {
             padding: 10px 20px;
-            border: none;
+            border: 2px solid black;
             border-radius: 5px;
             font-size: 16px;
             cursor: pointer;
@@ -231,6 +234,9 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
         button:focus {
             outline: none;
             box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+        }
+        .active {
+            border: 4px solid black;
         }
     </style>
 </head>
@@ -304,6 +310,16 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
                     .catch(error => console.error("Error:", error));
                 });
             });
+
+            // Set the active button based on current settings
+            const currentSettings = <?php echo json_encode($settings); ?>;
+            for (const setting in currentSettings) {
+                const value = currentSettings[setting];
+                const button = document.querySelector(`button[data-setting="${setting}"][data-value="${value}"]`);
+                if (button) {
+                    button.classList.add("active");
+                }
+            }
         });
     </script>
 </body>
